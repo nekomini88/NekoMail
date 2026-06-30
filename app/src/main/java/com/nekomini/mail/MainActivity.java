@@ -1,7 +1,11 @@
 package com.nekomini.mail;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,7 +21,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
     private WebView webView;
-    private static final String MAIL_URL = "https://mail.nekomini.dpdns.org/";
+    private String currentDomain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +29,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         webView = findViewById(R.id.webView);
+
+        loadWebViewWithDomain(); // Initial load
 
         // WebSettings
         WebSettings settings = webView.getSettings();
@@ -50,7 +56,7 @@ public class MainActivity extends Activity {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 String url = request.getUrl().toString();
-                if (url.contains("nekomini.dpdns.org")) {
+                if (url.contains(currentDomain)) {
                     return false;
                 }
                 if (url.startsWith("mailto:")) {
@@ -77,8 +83,36 @@ public class MainActivity extends Activity {
 
         webView.setWebChromeClient(new WebChromeClient());
 
-        // 加载
-        webView.loadUrl(MAIL_URL);
+        // Initial load and refresh on start
+        loadWebViewWithDomain();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        loadWebViewWithDomain(); // Refresh domain settings when activity becomes visible
+    }
+
+    private void loadWebViewWithDomain() {
+        SharedPreferences prefs = getSharedPreferences("NekoMailPrefs", Context.MODE_PRIVATE);
+        currentDomain = prefs.getString("email_domain", "mail.nekomini.dpdns.org"); // Default domain
+        webView.loadUrl("https://" + currentDomain + "/");
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(Menu.NONE, R.id.action_settings, Menu.NONE, "Settings");
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
