@@ -51,5 +51,6 @@ jobs:
         name: NekoMail v${{ github.run_number }}
         files: app/build/outputs/apk/debug/NekoMail.apk
         generate_release_notes: true
+        make_latest: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
